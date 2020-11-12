@@ -21,6 +21,7 @@ const ciasOPTS = {
     MYSQLtable: `CiaS_Participants`
 }
 const polyphony = new Polyphony(config, 3205);
+const twitch = polyphony.Twitch;
 const discord = new Discord.Client();
 const caznews = new Newsticker(config, 60, config.obs.address);
 const db = mysql.createPool({
@@ -293,7 +294,7 @@ module.exports = {
                     }
                 });
                 return;
-            } else if (((cname === `so`) || (cname === `rso`)) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+            } else if (((cname === `so`) || (cname === `rso`)) && (twitch.mod(context))) {
                 polyphony.Twitch.modules('shoutouts').then(channels_active => {
                     if (channels_active.includes(chan)) {
                         let module = 'shoutouts';
@@ -301,7 +302,7 @@ module.exports = {
                     }
                 });
                 return;
-            } else if ((cname === `cpr`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+            } else if ((cname === `cpr`) && (twitch.mod(context))) {
                 polyphony.Twitch.modules('twitchCPR').then(data => {
                     if (data.includes(chan)) {
                         twitchCPR.run(client, msg, params, context, channel, self);
