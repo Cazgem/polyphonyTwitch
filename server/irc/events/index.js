@@ -343,7 +343,7 @@ module.exports = {
                         console.log(context.mod);
                     } else if (cname === `debug`) {
                         let commandFile = hotload(`./commands/${cname}.js`)
-                        commandFile.run(client, msg, params, context, channel, self, polyphony)
+                        commandFile.run(client, message, params, context, channel, polyphony)
                     } else if (cname === `hailpolyphony`) {
                         client.action(channel, `Kneel before me, humans.... So that you may be spared my wrath!`);
                         client.action(channel, `I mean uhhhh........`);
@@ -467,7 +467,7 @@ module.exports = {
                     } else {
                         try { // Search for command in /commands (good for complex commands)
                             let commandFile = hotload(`./commands/${cname}.js`)
-                            commandFile.run(client, msg, params, context, channel, polyphony)
+                            commandFile.run(client, message, params, context, channel, polyphony)
                         } catch (err) {
                             // console.log(err);
                             try { // Search MySQL DB for command (good for simple commands. Use !polyphony add/edit <text> to add/edit commands

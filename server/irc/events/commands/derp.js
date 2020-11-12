@@ -9,7 +9,7 @@ exports.run = (client, msg, params, context, channel, polyphony) => {
         if (context.mod) {
             client.action(channel, `I'm not going to dignify that, @${context['display-name']}.....`);
         } else {
-            client.action(channel, `Everyone, ` + msg.slice(6) + ` has de-`);
+            client.action(channel, `Everyone, ` + msg + ` has de-`);
             setTimeout(() => {
                 client.action(channel, `wait a minute...... I don't derp! You're the derp!`);
             }, 500);
@@ -26,9 +26,9 @@ exports.run = (client, msg, params, context, channel, polyphony) => {
                 client.action(channel, `Everyone, ${context['display-name']} has derped. What a DERP!`);
             }, 5200);
         }
-    } else if (msg.slice(6) === '') {
+    } else if (msg === '') {
         client.action(channel, `Everyone, ${context['display-name']} has derped. What a DERP!`);
     } else {
-        client.action(channel, `Everyone, ` + msg.slice(6) + ` has derped. What a DERP!`);
+        client.action(channel, `Everyone, ` + msg + ` has derped. What a DERP!`);
     }
 }

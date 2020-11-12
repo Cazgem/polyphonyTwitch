@@ -17,8 +17,7 @@ function caznews() {
 exports.run = (client, msg, params, context, channel, self) => {
     polyfunc = params[0];
     params[0] = '';
-    let msg2 = msg.slice(14);
-    if (msg2) {
+    if (msg) {
         if ((context['user-type'] === ('mod')) || (context["display-name"] === "Cazgem")) {
             let post = {
                 title: 'Post',
@@ -27,7 +26,7 @@ exports.run = (client, msg, params, context, channel, self) => {
             let sql = 'INSERT INTO citiesnews SET ?';
             let query = db.query(sql, post, (err, result) => {
                 if (err) throw err;
-                console.log("New Headline submitted by " + context['display-name'] + ": " + msg2);
+                console.log("New Headline submitted by " + context['display-name'] + ": " + msg);
             });
         } else {
             return;
