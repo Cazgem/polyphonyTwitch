@@ -252,6 +252,7 @@ module.exports = {
             if (self) { return; }
             let params = msg.slice(1).split(' ');
             let cname = params.shift().toLowerCase();
+            const message = msg.slice(cname.length + 2);
             //////////// CiaS Command Set ////////////
             if (chan === `citiesinasnap`) {
                 const cias = new CiaS(ciasOPTS, client);
@@ -367,6 +368,76 @@ module.exports = {
                         client.action(channel, `You rolled a ${num}`);
                     } else if (cname === `online`) {
                         console.log(polyphony.Twitch.isStreamLive(params[0]));
+                    } else if (cname === `game`) {
+                        if ((message !== '') && (context.mod)) {
+                            polyphony.Twitch.gameByName(message, function (err, res) {
+                                if (err) {
+                                    console.log(err)
+                                } else {
+                                    let body = {
+                                        game_id: `${res.id}`
+                                    }
+                                    console.log(body.game_id)
+                                    polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+                                        if (err !== null) {
+                                            console.log(err)
+                                        } else {
+                                            client.action(channel, `Changed Stream Category -> ${params[0]}`)
+                                        }
+                                    })
+                                }
+                            })
+                        } else {
+                            polyphony.Twitch.channels(context[`room-id`], function (err, res) {
+                                client.action(channel, `@${context['display-name']} -> The Streamer's category currently set to ${res.game_name}`)
+                            })
+                        }
+                    } else if (cname === `title`) {
+                        if ((message !== '') && (context.mod)) {
+                            let body = {
+                                title: `${message}`
+                            }
+                            polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+                                if (err !== null) {
+                                    console.log(err)
+                                } else {
+                                    client.action(channel, `Changed Stream Title -> ${body.title}`)
+                                }
+                            })
+                        } else {
+                            polyphony.Twitch.channels(context[`room-id`], function (err, res) {
+                                client.action(channel, `@${context['display-name']} -> Current Stream Title: ${res.title}`)
+                            })
+                        }
+                    } else if ((cname === `setgame`) && (context.mod)) {
+                        polyphony.Twitch.gameByName(message, function (err, res) {
+                            if (err) {
+                                console.log(err)
+                            } else {
+                                let body = {
+                                    game_id: `${res.id}`
+                                }
+                                console.log(body.game_id)
+                                polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+                                    if (err !== null) {
+                                        console.log(err)
+                                    } else {
+                                        client.action(channel, `Changed Stream Category -> ${params[0]}`)
+                                    }
+                                })
+                            }
+                        })
+                    } else if ((cname === `settitle`) && (context.mod)) {
+                        let body = {
+                            title: `${message}`
+                        }
+                        polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+                            if (err !== null) {
+                                console.log(err)
+                            } else {
+                                client.action(channel, `Changed Stream Title -> ${body.title}`)
+                            }
+                        })
                     } else if (cname === 'schedule') {
                         command(channel, 'schedule');
                     } else if ((cname === 'web') || (cname === 'website')) {
