@@ -20,7 +20,6 @@ const webpush = require(`web-push`);
 /**
  * App Variables
  */
-const modules_ban = config.modules.bans;
 const publicVapidKey = config.publicVapidKey;
 const privateVapidKey = config.privateVapidKey;
 webpush.setVapidDetails(`mailto:notifications@polyphony.me`, publicVapidKey, privateVapidKey);
