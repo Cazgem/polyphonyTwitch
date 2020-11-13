@@ -31,7 +31,7 @@
         "os": "^0.1.1",
         "path": "^0.12.7",
         "pm2": "^4.5.0",
-        "polyphony.js": "file:polyphony.js",
+        "polyphony.js": "^1.0.0",
         "pug": "^3.0.0",
         "rss-feed-emitter": "^3.1.2",
         "socket.io": "^2.3.0",
