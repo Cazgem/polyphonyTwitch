@@ -1,0 +1,92 @@
+{
+    "name": "twitchbot",
+    "version": "1.0.0",
+    "description": "Polyphony Twitch Bot for chat integration to the game, streaming software, web elements, and more.",
+    "main": "app.js",
+    "dependencies": {
+        "ajax": "0.0.4",
+        "body-parser": "^1.19.0",
+        "chalk": "^3.0.0",
+        "chat-client": "^1.0.3",
+        "cluster": "^0.7.7",
+        "discord.js": "^12.3.1",
+        "dotenv": "^4.0.0",
+        "express": "^4.17.1",
+        "forever": "^2.0.0",
+        "fs-extra": "^8.1.0",
+        "hotload": "0.0.5",
+        "jquery": "^3.5.1",
+        "jsdom": "^16.4.0",
+        "kill-port": "^1.6.1",
+        "minimist": "^1.2.5",
+        "morgan": "^1.10.0",
+        "mysql": "^2.18.1",
+        "mysql2": "^2.2.5",
+        "net": "^1.0.2",
+        "node-notifier": "^8.0.0",
+        "node-webhooks": "^1.4.2",
+        "nunjucks": "^3.2.2",
+        "obs-websocket-js": "^4.0.1",
+        "os": "^0.1.1",
+        "path": "^0.12.7",
+        "pm2": "^4.5.0",
+        "pug": "^3.0.0",
+        "rss-feed-emitter": "^3.1.2",
+        "socket.io": "^2.3.0",
+        "tiltifyapi": "^2.2.3",
+        "tmi.js": "^1.5.0",
+        "toastr": "^2.1.4",
+        "twitch": "^3.7.1",
+        "twitch-chat-client": "^3.7.1",
+        "twitch-pubsub-client": "^3.7.1",
+        "twitch-webhook": "^1.2.4",
+        "twitch-webhooks": "^3.7.1",
+        "twitchps": "^1.5.5",
+        "twitter": "^1.7.1",
+        "web-push": "^3.4.4",
+        "winston": "^3.3.3",
+        "winston-loggly-bulk": "^3.1.1",
+        "ws": "^7.2.1",
+        "xmlhttprequest": "^1.8.0"
+    },
+    "devDependencies": {
+        "browser-sync": "^2.26.12",
+        "nodemon": "^1.19.4"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "screen -S twitch npx nodemon app.js",
+        "dev2": "screen -S twitch npx nodemon heartbeat.js",
+        "start": "screen -S twitch npx node heartbeat.js",
+        "twitch": "screen -S twitch npx node heartbeat.js",
+        "direct": "screen npx node app.js",
+        "discord": "screen -S discord npx node discord_app.js",
+        "link": "npm link polyphony.js twitch-cpr cias caznews",
+        "ui": "browser-sync start --proxy=localhost:3000 --files='**/*.css, **/*.pug, **/*.js' --ignore=node_modules --reload-delay 10 --no-ui --no-notify"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cazgem/twitchbot.git"
+    },
+    "author": "Cazgem",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/cazgem/twitchbot/issues"
+    },
+    "homepage": "https://github.com/cazgem/twitchbot#readme",
+    "nodemonConfig": {
+        "events": {
+            "restart": "kill-port 3140",
+            "crash": "kill-port 3140"
+        },
+        "ignore": [
+            ".git",
+            "node_modules/**/node_modules",
+            "server/irc/events/commands/*",
+            "server/irc/events/handlers/*",
+            "server/irc/events/modules/*"
+        ],
+        "delay": "500",
+        "restart": "kill-port [my port]"
+    }
+}
