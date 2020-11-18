@@ -9,6 +9,7 @@
         "chalk": "^3.0.0",
         "chat-client": "^1.0.3",
         "cluster": "^0.7.7",
+        "crypto": "^1.0.1",
         "discord.js": "^12.3.1",
         "dotenv": "^4.0.0",
         "express": "^4.17.1",
@@ -86,7 +87,7 @@
             "server/irc/events/handlers/*",
             "server/irc/events/modules/*"
         ],
-        "delay": "500",
+        "delay": "1000",
         "restart": "kill-port [my port]"
     }
 }

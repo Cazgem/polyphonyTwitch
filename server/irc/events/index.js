@@ -1,16 +1,16 @@
-const config = require('../config');
-const hotload = require(`hotload`);
-const Polyphony = require('polyphony.js');
+const fs = require('fs');
 const CiaS = require(`cias`);
-const twitchCPR = require(`./modules/twitchcpr.js`);
 const chalk = require('chalk');
 const mysql = require('mysql');
+const hotload = require(`hotload`);
+const Twitter = require('twitter');
+const config = require('../config');
 const TwitchPS = require('twitchps');
 const Discord = require(`discord.js`);
 const Newsticker = require(`caznews`);
+const Polyphony = require('polyphony.js');
+const twitchCPR = require(`./modules/twitchcpr.js`);
 //// const notifier = require('node-notifier');
-var Twitter = require('twitter');
-// Emulate browser in the terminal
 const ciasOPTS = {
     OBSaddress: config.default.obs_address,
     OBSpassword: config.default.obs_pass,
@@ -98,24 +98,6 @@ function Twitch_PS(news_opts) {
     });
     psViewCount();
 }
-function psChannelPoints(channel, token) {
-    ps.addTopic([{
-        topic: `channel-points-channel-v1.${channel}`,
-        token: `${token}`
-    }]);
-}
-function psBitsEvents(channel, token) {
-    ps.addTopic([{
-        topic: `channel-bits-events-v1.${channel}`,
-        token: `${token}`
-    }]);
-}
-function psSubscribeEvents(channel, token) {
-    ps.addTopic([{
-        topic: `channel-subscribe-events-v1.${channel}`,
-        token: `${token}`
-    }]);
-}
 function psViewCount() {
 
     ps.on('viewcount', (data) => {
@@ -130,11 +112,6 @@ function getViewCount(channel) {
     ps.removeTopic([{
         topic: `video-playback.${channel}`
     }]);
-}
-function psBits() {
-    ps.on('bits', (data) => {
-        log(`info`, `Bits Event | Amount: ${data.bits_used} | Channel: ${data.channel_name} | User: ${data.user_name}`);
-    });
 }
 function psStreamStatus(channel) {
     ps.addTopic([{
@@ -212,8 +189,11 @@ process.on('uncaughtException', function (err) {
     // console.log("Node NOT Exiting...");
 });
 module.exports = {
-    attachEvents: function (client) {
+    attachEvents: function (client, app, path) {
         // Discord_Passive();
+        app.post("/webhooks/callback", (req, res) => {
+            hotload(`./handlers/eventsub.js`).run(req, res, polyphony, client, fs, path);
+        });
         //////////// JOIN TWITCH CHANNELS //////////////
         polyphony.Twitch.modules('all').then(data => {
             data.forEach(chan => {
@@ -243,6 +223,7 @@ module.exports = {
         }
         Twitch_PS(news_opts);
         client.on('message', function (channel, context, msg, self) {
+            // console.log(msg);
             log(`info`, `${channel} | ${context['display-name']} | ${msg}`);
             const chan = channel.slice(1).toLowerCase();
             if (msg.toLowerCase().includes('cazgem')) {
@@ -294,7 +275,7 @@ module.exports = {
                     }
                 });
                 return;
-            } else if (((cname === `so`) || (cname === `rso`)) && (twitch.mod(context))) {
+            } else if ((cname === `so` || cname === `rso`) && (twitch.mod(context))) {
                 polyphony.Twitch.modules('shoutouts').then(channels_active => {
                     if (channels_active.includes(chan)) {
                         let module = 'shoutouts';
@@ -310,6 +291,38 @@ module.exports = {
                         client.action(channel, `Hey there! Looks like you want to use the Channel Point Rewards Module (!cpr). Try enabling this module first before using it!`)
                     }
                 })
+            } else if (cname === `title` || cname === `settitle`) {
+                polyphony.Twitch.modules('title').then(data => {
+                    if (data.includes(chan)) {
+                        if (cname === `title`) {
+                            if ((message !== '') && (twitch.mod(context))) {
+                                setTitle(message, context, client, channel);
+                            } else {
+                                polyphony.Twitch.channels(context[`room-id`], function (err, res) {
+                                    client.action(channel, `@${context['display-name']} -> Current Stream Title: ${res.title}`)
+                                })
+                            }
+                        } else if ((cname === `settitle`) && (twitch.mod(context))) {
+                            setTitle(message, context, client, channel);
+                        }
+                    }
+                })
+            } else if (cname === `game` || cname === `setgame`) {
+                polyphony.Twitch.modules(`game`).then(data => {
+                    if (data.includes(chan)) {
+                        if (cname === `game`) {
+                            if ((message !== '') && (twitch.mod(context))) {
+                                setGame(message, context, client, channel);
+                            } else {
+                                polyphony.Twitch.channels(context[`room-id`], function (err, res) {
+                                    client.action(channel, `@${context['display-name']} -> The Streamer's category currently set to ${res.game_name}`)
+                                })
+                            }
+                        } else if ((cname === `setgame`) && (twitch.mod(context))) {
+                            setGame(message, context, client, channel);
+                        }
+                    }
+                })
             }
             polyphony.Twitch.modules('commands').then(channels_active => {
                 if (channels_active.includes(chan)) {
@@ -317,7 +330,7 @@ module.exports = {
                     else if (msg === '^^') { client.action(channel, '^^^'); return; }
                     else if (msg[0] !== '!') { return; }
                     //////// MODERATOR/BROADCASTER ONLY COMMANDS ////////
-                    if ((context.mod) || (context['room-id'] === context['user-id'])) {
+                    if (twitch.mod(context)) {
                         // Commands_OBS(channel, context, msg, client, params, cname);
                         polyphony.Twitch.modules('obs').then(data => {
                             if (data.includes(channel.slice(1))) {
@@ -325,9 +338,9 @@ module.exports = {
                                 hotload(`./handlers/${module}.js`).run(client, msg, context, channel, polyphony);
                             }
                         });
-                        if (cname === 'polyphony') {
+                        if (cname === 'polyphony' || cname === `poly`) {
                             let module = 'polyphony_handler';
-                            hotload(`./handlers/${module}.js`).run(channel, context, msg, client, params, cname, polyphony, db)
+                            hotload(`./handlers/${module}.js`).run(channel, context, message, client, params, cname, polyphony, db)
                         }
                     }
                     if ((context['display-name'] === 'Cazgem') && (cname === `raid`)) {
@@ -369,26 +382,6 @@ module.exports = {
                         client.action(channel, `You rolled a ${num}`);
                     } else if (cname === `online`) {
                         console.log(polyphony.Twitch.isStreamLive(params[0]));
-                    } else if (cname === `game`) {
-                        if ((message !== '') && (twitch.mod(context))) {
-                            setGame(message, context, client, channel);
-                        } else {
-                            polyphony.Twitch.channels(context[`room-id`], function (err, res) {
-                                client.action(channel, `@${context['display-name']} -> The Streamer's category currently set to ${res.game_name}`)
-                            })
-                        }
-                    } else if (cname === `title`) {
-                        if ((message !== '') && (twitch.mod(context))) {
-                            setTitle(message, context, client, channel);
-                        } else {
-                            polyphony.Twitch.channels(context[`room-id`], function (err, res) {
-                                client.action(channel, `@${context['display-name']} -> Current Stream Title: ${res.title}`)
-                            })
-                        }
-                    } else if ((cname === `setgame`) && (twitch.mod(context))) {
-                        setGame(message, context, client, channel);
-                    } else if ((cname === `settitle`) && (twitch.mod(context))) {
-                        setTitle(message, context, client, channel);
                     } else if (cname === 'schedule') {
                         command(channel, 'schedule');
                     } else if ((cname === 'web') || (cname === 'website')) {

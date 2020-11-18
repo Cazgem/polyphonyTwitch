@@ -5,8 +5,8 @@ exports.run = (client, msg, context, channel, polyphony) => {
     let params = msg.slice(1).split(' ');
     let cname = params.shift().toLowerCase();
     if ((context.mod) || (context['room-id'] === context['user-id'])) {
-        console.log(params)
-        console.log(`Cname = ${cname}`)
+        // console.log(params)
+        // console.log(`Cname = ${cname}`)
         if (cname === `mute`) {
             let source = params[0];
             polyphony.OBS.mute(source, function (err, res) {

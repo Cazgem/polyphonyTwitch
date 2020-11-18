@@ -1,35 +1,28 @@
-const config = require('../../config');
-exports.run = (channel, context, msg, client, params, cname, polyphony, db) => {
-    let cmd = params[1];
-    polyfunc = params[0];
-    params[1] = '';
-    var chan = channel.slice(1);
-    let command = cmd;
+exports.run = (channel, context, message, client, params, cname, polyphony, db) => {
     if (params[0]) {
-        polyfunc = params[0];
-        params[0] = '';
-        if ((polyfunc === 'add') || (polyfunc === 'new') || (polyfunc === 'addcom')) {
-            let cmd_response = params.slice(2).join(' ');
-            let response = cmd_response;
+        let cmd = params[1];
+        let polyfunc = params[0];
+        var chan = channel.slice(1);
+        let response = message.slice(polyfunc.length + cmd.length + 2);
+        if (polyfunc === 'add' || polyfunc === `new` || polyfunc === `addcom`) {
             let load = {
                 channel: chan,
                 command: cmd,
-                response: cmd_response
+                response: response
             };
             let sql = 'INSERT INTO commands SET ?';
             let query = db.query(sql, load, (err, result) => {
                 if (err) throw err;
             });
             client.action(channel, 'Added Command ' + cmd + ' for channel ' + channel.slice(1) + '.');
-        } else if ((polyfunc === 'edit') || (polyfunc === 'update')) {
-            let cmd_response = params.slice(2).join(' ');
-            let sql = `UPDATE commands SET response = "${response}" WHERE command = "${command}" AND channel = "${chan}"`;
+        } else if (polyfunc === 'edit' || polyfunc === 'update') {
+            let sql = `UPDATE commands SET response = "${response}" WHERE command = "${cmd}" AND channel = "${chan}"`;
             let query = db.query(sql, (err, result) => {
                 if (err) throw err;
             });
             client.action(channel, 'Edited Command ' + cmd + ' for channel ' + channel.slice(1) + '.');
         } else if (polyfunc === 'rename') {
-            let sql = `UPDATE commands SET command = "${response}" WHERE command = "${command}" AND channel = "${chan}"`;
+            let sql = `UPDATE commands SET command = "${response}" WHERE command = "${cmd}" AND channel = "${chan}"`;
             let query = db.query(sql, (err, result) => {
                 if (err) throw err;
             });
@@ -57,7 +50,7 @@ exports.run = (channel, context, msg, client, params, cname, polyphony, db) => {
             });
             client.action(channel, 'Copied Command ' + cmd + ' to ' + cmd_new + ' for channel ' + channel.slice(1) + '.');
         } else if (polyfunc === 'delete') {
-            let sql = `DELETE FROM commands WHERE command = "${command}" AND channel = "${chan}"`;
+            let sql = `DELETE FROM commands WHERE command = "${cmd}" AND channel = "${chan}"`;
             let query = db.query(sql, (err, result) => {
                 if (err) throw err;
             });

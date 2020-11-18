@@ -1,7 +1,7 @@
 /**
  * Required External Modules
  */
-const hb = require(`./heartbeat2.js`);
+var fs = require('fs');
 const config = require('./server/irc/config.js');
 const express = require('express');
 const chalk = require('chalk');
@@ -12,48 +12,67 @@ const router = require('./server/routes');
 const path = require("path");
 // const notifier = require(`node-notifier`);
 const http = require(`http`);
+const https = require(`https`);
 const socketIo = require(`socket.io`);
 const Polyphony = require('polyphony.js');
 const polyphony = new Polyphony(config, 3207);
 const webpush = require(`web-push`);
+const crypto = require('crypto');
+const _config = JSON.parse(fs.readFileSync(path.join(
+  __dirname,
+  '_config.json'
+)));
+const credentials = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+const app = express();
 
 /**
  * App Variables
  */
-const publicVapidKey = config.publicVapidKey;
-const privateVapidKey = config.privateVapidKey;
-webpush.setVapidDetails(`mailto:notifications@polyphony.me`, publicVapidKey, privateVapidKey);
-const app = express();
-const port = process.env.PORT || "3000";
+// const port = process.env.PORT || "443";
+const port = "3000";
+
 /**
  *  App Configuration
  */
-
-app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
-app.use(express.static(path.join(__dirname, "public")));
-app.use(bodyParser.urlencoded({ extended: true }));
+/**
+ *  Middleware
+ */
+// app.use('/', router);
+// app.use(express.static('browser/public'));
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(morgan('dev'));
+// app.use(express.static(path.join(__dirname, `views`)));
+app.use(bodyParser.json({
+  verify: function (req, res, buf, encoding) {
+    // is there a hub to verify against
+    req.twitch_hub = false;
+    if (req.headers && req.headers.hasOwnProperty('twitch-eventsub-message-signature')) {
+      req.twitch_hub = true;
+    }
+  }
+}));
+// app.use(bodyParser.json());
+
 /**
  * Routes Definitions
  */
-const server = http.Server(app);
-server.listen(3200);
-app.use(express.static(path.join(__dirname, `client`)));
 app.get("/", (req, res) => {
   res.render("index", { title: "Home" });
+  console.log("/home?")
   // notifier.notify('Go empty the dishwasher!');
 });
 app.get("/user", (req, res) => {
   res.render("user", { title: "Profile", userProfile: { nickname: "Auth0" } });
+  console.log("/user?")
 });
-app.post("/webhook/*", (req, res) => {
-  console.log(req.body) // Call your action on the request here
-  res.status(200).end() // Responding is important
-})
 app.post("/charity", (req, res) => {
   console.log(req.body) // Call your action on the request here
   res.status(200).end() // Responding is important
-})
+});
 app.post('/massban', function (req, res) {
   const tmi = require('tmi.js');
   var channel_list = eval("[" + req.body.channels + "]");
@@ -134,8 +153,6 @@ app.get('/report', function (req, res) {
 /**
  * Server Activation
  */
-// middleware
-app.use(morgan('dev'));
 
 //listen and respond to heartbeat request from parent
 process.on('message', (message) => {
@@ -146,23 +163,15 @@ process.on('message', (message) => {
   }
 });
 
-app.use(express.static('browser/public'));
-
-// app.use('/', router);
-
-app.use(bodyParser.json())
-
 app.listen(port, () => {
-  console.log(chalk.yellow(`App is listening at https://dashboard.polyphony.me/`));
+  console.log(chalk.yellow(`App is listening at https://twitchapi.polyphony.me/`));
 });
 
-app.use(bodyParser.json())
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
 
-app.post("/hook", (req, res) => {
-  console.log(req.body) // Call your action on the request here
-  res.status(200).end() // Responding is important
-})
-
+httpServer.listen(8080);
+httpsServer.listen(8443);
 const irc = require('./server/irc');
 // const polyphony = require(`./polyphony`);
-irc.start();
+irc.start(app, path);
