@@ -6,7 +6,7 @@ const mysql = require('mysql');
 const polyphony = require('../../polyphony');
 
 exports.run = (client, msg, params, context, channel, self) => {
-    if (context.mod || (context["display-name"] === "citiesinasnap")) {
+    if (context.mod || (context["display-name"] === "gamesinasnap")) {
         let sql = `SELECT name FROM CiaS_Participants`;
         let response = db.query(sql, (err, result) => {
             if (err) throw err;

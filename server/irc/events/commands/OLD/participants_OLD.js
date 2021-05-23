@@ -79,10 +79,10 @@ exports.run = (client, msg, params, context, channel, self) => {
         console.log(channel, 'Edited Participant ' + number + ' URL.');
     }
 
-    if ((params[0] === 'edit') && ((context['user-type'] === ('mod')) || (context["display-name"] === "citiesinasnap"))) {
+    if ((params[0] === 'edit') && ((context['user-type'] === ('mod')) || (context["display-name"] === "gamesinasnap"))) {
         addParticipant(params[1], params[2]);
 
-    } else if ((params[0] === 'new') && ((context['user-type'] === ('mod')) || (context["display-name"] === "citiesinasnap"))) {
+    } else if ((params[0] === 'new') && ((context['user-type'] === ('mod')) || (context["display-name"] === "gamesinasnap"))) {
         addParticipant(1, params[1])
         setTimeout(() => {
             addParticipant(2, params[2]);
@@ -93,7 +93,7 @@ exports.run = (client, msg, params, context, channel, self) => {
         setTimeout(() => {
             addParticipant(4, params[4]);
         }, 3000);
-    } else if ((params[0] === 'join') && ((context['user-type'] === ('mod')) || (context["display-name"] === "citiesinasnap"))) {
+    } else if ((params[0] === 'join') && ((context['user-type'] === ('mod')) || (context["display-name"] === "gamesinasnap"))) {
         client.action(channel, "This round's Participants are: ");
         let sql = `SELECT * FROM CiaS_Participants`;
         let response = db.query(sql, (err, result) => {
@@ -102,7 +102,7 @@ exports.run = (client, msg, params, context, channel, self) => {
                 client.join(result[id].name);
             });
         });
-    } else if ((params[0] === 'part') && ((context['user-type'] === ('mod')) || (context["display-name"] === "citiesinasnap"))) {
+    } else if ((params[0] === 'part') && ((context['user-type'] === ('mod')) || (context["display-name"] === "gamesinasnap"))) {
         client.action(channel, "This round's Participants are: ");
         let sql = `SELECT * FROM CiaS_Participants`;
         let response = db.query(sql, (err, result) => {

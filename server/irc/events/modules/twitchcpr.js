@@ -1,22 +1,9 @@
 const config = require('../../config');
-const twitchCPRopts = {
-    channel_name: config.default.streamer, // REQUIRED!
-    channelID: config.default.channel_id, // REQUIRED!
-    authorization: config.identity.authorization, // REQUIRED! OAUTH 456adwn3qf93yufbnojhnbe This is unique to this service/account combination. Info on Github.
-    debug: `false`,
-    mysql: {
-        connectionLimit: 10,
-        host: config.mysql.host,
-        user: config.mysql.user,
-        password: config.mysql.password,
-        database: config.mysql.database
-    }
-}
 const TwitchCPR = require(`twitch-cpr`);
 const forbidden = [`update`, `edit`, `new`, `create`, `delete`, , `copy`, `cp`, `clone`, `del`, `remove`, `list`, `debug`, `switch`, `help`, `polyphony`, `insert`, `profile`, `profiles`];
 const errInvalid = `Invalid Profile Name. Please Try Something Else.`;
 exports.run = (client, msg, params, context, channel, self) => {
-    const twitchCPR = new TwitchCPR(twitchCPRopts, context[`room-id`], channel.slice(1));
+    const twitchCPR = new TwitchCPR(config, channel.slice(1));
     if ((params[0] === `update`) || (params[0] === `edit`)) {
         if (forbidden.includes(params[1])) { client.action(channel, errInvalid); }
         else {
@@ -62,7 +49,13 @@ exports.run = (client, msg, params, context, channel, self) => {
     } else if (params[0]) {
         if (forbidden.includes(params[0])) { client.action(channel, errInvalid); }
         else {
-            twitchCPR.switch(params[0], context[`room-id`], channel.slice(1));
+            twitchCPR.switch(params[0], context[`room-id`], channel.slice(1), function (err, res) {
+                if (err) {
+                    console.log(`ERROR: ` + err);
+                } else if (res) {
+                    console.log(`RESOLVE: ` + res);
+                }
+            });
             client.action(channel, `Profile switched to ${params[0]} for ${channel.slice(1)}.`);
         }
     } else {

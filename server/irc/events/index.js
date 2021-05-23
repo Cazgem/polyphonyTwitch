@@ -9,7 +9,7 @@ const TwitchPS = require('twitchps');
 const Discord = require(`discord.js`);
 const Newsticker = require(`caznews`);
 const Polyphony = require('polyphony.js');
-const twitchCPR = require(`./modules/twitchcpr.js`);
+// const twitchCPR = require(`./modules/twitchcpr.js`);
 //// const notifier = require('node-notifier');
 const ciasOPTS = {
     OBSaddress: config.default.obs_address,
@@ -137,41 +137,6 @@ function Startup_Twitter() {
         if (!error) { }
     });
 }
-function Discord_Passive() {
-    discord.on('ready', () => {
-        console.log(chalk.yellow(`I am ready for Discord as ${discord.user.tag}!`));
-    });
-    discord.login(config.discord.token);
-    discord.on('message', msg => {
-        console.log(`${msg.guild.member.displayName}: ${msg}`);
-        let params = msg.content.slice(1).split(' ');
-        let cname = params.shift().toLowerCase();
-        if (msg[0] !== '!') {
-            return;
-        }
-        if (cname === '!ping') {
-            msg.channel.send('Pong.');
-        } else if (msg.content === `!role`) {
-            let role = discord.guild.roles.find('name', 'Minecraft');
-            msg.channel.send(role);
-        } else {
-            try { // Search MySQL DB for command (good for simple commands. Use !polyphony add/edit <text> to add/edit commands
-                var chan = 'cazgem';
-                let sql = `SELECT response FROM commands WHERE channel = ? AND command = ?`;
-                let response = db.query(sql, [chan, cname], (err, result) => {
-                    Object.keys(result).forEach(function (key) {
-                        msg.channel.send(result[key].response);
-                    });
-                    if (err) throw err;
-                    // polyphony.cleanup();
-                });
-            } catch (err) {
-                console.log(chalk.red("ERROR! No Command Found"));
-            }
-        }
-    });
-    discord.login(`${config.discord.token}`);
-}
 function sleep(milliseconds) {
     const date = Date.now();
     let currentDate = null;
@@ -236,7 +201,7 @@ module.exports = {
             let cname = params.shift().toLowerCase();
             const message = msg.slice(cname.length + 2);
             //////////// CiaS Command Set ////////////
-            if (chan === `citiesinasnap`) {
+            if (chan === `gamesinasnap`) {
                 const cias = new CiaS(ciasOPTS, client);
                 if (cname === `participants`) {
                     console.log(params);
@@ -253,6 +218,10 @@ module.exports = {
                     cias.clear();
                 } else if ((cname === `announce`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
                     cias.announce(msg, context);
+                } else if ((cname === `route`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    console.log(params[0]);
+                    console.log(message.slice(params[0].length + 1));
+                    cias.route(params[0], message.slice(params[0].length + 1), context);
                 } else if ((cname === `tenseconds`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
                     cias.tenseconds();
                 } else if ((cname === `starting`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
@@ -300,7 +269,7 @@ module.exports = {
                             } else {
                                 polyphony.Twitch.channels(context[`room-id`], function (err, res) {
                                     client.action(channel, `@${context['display-name']} -> Current Stream Title: ${res.title}`)
-                                })
+                                });
                             }
                         } else if ((cname === `settitle`) && (twitch.mod(context))) {
                             setTitle(message, context, client, channel);
@@ -471,7 +440,7 @@ module.exports = {
             }
         });
 
-        var channels = [`z_lycos`, `cazgem`, `citiesinasnap`, `polyphony`];
+        var channels = [`z_lycos`, `cazgem`, `gamesinasnap`, `polyphony`];
         channels.forEach(channel => [
             polyphony.Twitch.isLive(channel).then((data) => {
                 if (data === true) {
@@ -480,9 +449,10 @@ module.exports = {
                             if (channel === `cazgem`) {
                                 headline = `Welcome to the city, ${follower}! Dr. Mayor Master Emperor Caz welcomes you.`;
                                 caznews.new(`cazgem`, headline, 60);
-                            } else if (channel === `citiesinasnap`) {
+                                client.say(channel, `Welcome to the community, ${follower}!`);
+                            } else if (channel === `gamesinasnap`) {
                                 headline = `Welcome to the CiaS community, ${follower}!.`;
-                                caznews.new(`citiesinasnap`, headline, 60);
+                                caznews.new(`gamesinasnap`, headline, 60);
                                 client.say(channel, `Welcome to the CiaS community, ${follower}!`);
                             } else {
                                 client.say(channel, `Thanks for the follow, ${follower}!`);

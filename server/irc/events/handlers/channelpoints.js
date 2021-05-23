@@ -6,6 +6,7 @@ exports.run = (data, news_opts) => {
     if (data.user_input === `debug`) {
         console.log(`Requested Redemption: ${data.reward.title} by ${data.redemption.user.display_name}`);
     } else if (data.reward.id === `68f28aca-068b-4145-9df5-bcb9709225b7`) { /// CazNews ///
+        console.log(`Caznews Time!`)
         caznews.new(`cazgem`, data.redemption.user_input, 60);
     } else if (data.reward.id === `3535f36f-d8db-4f60-8e5e-dd3c2c395e91`) { /// Adopt a Street ///
         let headline = `${data.redemption.user.display_name} Adopts ${data.user_input}. Locals look forward to well-kept streets!`;

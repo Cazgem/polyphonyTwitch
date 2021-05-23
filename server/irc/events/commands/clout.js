@@ -11,8 +11,8 @@ const db = mysql.createConnection({
     database: config.mysql.database
 });
 exports.run = (client, msg, params, context, channel, self) => {
-    if (params[0]) {
-        client.action(channel, `Here's your clout, ` + params[0] + `. Now get out! CLOUT CHASER!`);
+    if (msg) {
+        client.action(channel, `Here's your clout, ${msg}. Now get out! CLOUT CHASER!`);
     } else {
         client.action(channel, `Here's your clout, ` + context["display-name"] + `. Now get out! CLOUT CHASER!`);
     }

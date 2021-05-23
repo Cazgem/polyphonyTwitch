@@ -13,7 +13,7 @@ const db = mysql.createConnection({
 exports.run = (client, msg, params, context, channel, self) => {
     // client.action(channel, context["display-name"] + ` has voted for ${params[0]} which brings the total to `);
     // var chan = channel.slice(1);
-    // let sql = `UPDATE votes SET vote = ${} WHERE channel = "citiesinasnap" AND name = "vote" AND user = "${context["display-name"]}"`;
+    // let sql = `UPDATE votes SET vote = ${} WHERE channel = "gamesinasnap" AND name = "vote" AND user = "${context["display-name"]}"`;
     // let query = db.query(sql, (err, result) => {
     //     if (err) throw err;
     // });

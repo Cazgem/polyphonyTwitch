@@ -16,7 +16,7 @@ module.exports = {
             console.log('subscription', { channel, username, method, message, userstate });
             if (channel.slice(1) === 'Cazgem') {
                 client.say(channel, `Thanks for subscribing, ${username}! You are a legend. Welcome to the Jank Police, my friend.`);
-            } else if (channel.slice(1) === 'citiesinasnap') {
+            } else if (channel.slice(1) === 'gamesinasnap') {
                 client.say(channel, `Thanks for subscribing, ${username}! Your support allows this event to continue and the community is proud to have you as a supporter of this content!`);
             } else {
 
@@ -29,7 +29,7 @@ module.exports = {
             if (sharedStreak) {
                 if (channel.slice(1) === 'Cazgem') {
                     client.say(channel, `Thanks for resubscribing for ${streakMonths} consecutive months, ${username}! The Jank Police wouldn't be the same without you, friend.`);
-                } else if (channel.slice(1) === 'citiesinasnap') {
+                } else if (channel.slice(1) === 'gamesinasnap') {
                     client.say(channel, `Thanks for subscribing, ${username}! Your support allows this event to continue and the community is proud to have you as a supporter of this content!`);
                 } else {
 
@@ -58,7 +58,7 @@ module.exports = {
         // });
         client.on('message', function (channel, context, msg, self) {
             var chan = channel.slice(1);
-            const channels_active = [`cazgem`, `citiesinasnap`];
+            const channels_active = [`cazgem`, `gamesinasnap`];
             if (self) return;
             try {
                 let data = {
@@ -109,7 +109,7 @@ module.exports = {
             let query = db.query(`INSERT INTO raids SET ?`, post, (err, result) => {
                 if (err) throw err;
             });
-            if ((chan === `cazgem`) || (chan === `citiesinasnap`)) {
+            if ((chan === `cazgem`) || (chan === `gamesinasnap`)) {
                 client.say(channel, `/me Welcome Raiders!`);
                 setTimeout(() => {
                     client.say(channel, `/me ` + username + ` has raided the channel, bringing ` + viewers + ` friends with them. Show them some love, will ya?`);
@@ -145,7 +145,7 @@ module.exports = {
             let query = db.query(`INSERT INTO raids SET ?`, post, (err, result) => {
                 if (err) throw err;
             });
-            if ((chan === `cazgem`) || (chan === `citiesinasnap`)) {
+            if ((chan === `cazgem`) || (chan === `gamesinasnap`)) {
                 client.say(channel, `/me Welcome Raiders!`);
                 setTimeout(() => {
                     client.say(channel, `/me ` + username + ` has raided the channel, bringing ` + viewers + ` friends with them. Show them some love, will ya?`);

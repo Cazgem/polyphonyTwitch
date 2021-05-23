@@ -1,11 +1,11 @@
 exports.run = (client, msg, params, context, channel, polyphony) => {
     const polyphonyAltNames = [`polyphony`, `Polyphony`, `P0lyphony`, `Po1yphony`, `POlyphony`, `POLYPHONY`];
     const cazgemAltNames = [`cazgem`, `Cazgem`, `Caz`, `caz`, `CAZGEM`];
-    if (cazgemAltNames.includes(params[0])) {
+    if (cazgemAltNames.includes(msg)) {
         polyphony.OBS.trigger('Derp!', 2, function (err, res) {
             if (err) { console.log(err) }
         })
-    } else if (polyphonyAltNames.includes(params[0])) {
+    } else if (polyphonyAltNames.includes(msg)) {
         if (context.mod) {
             client.action(channel, `I'm not going to dignify that, @${context['display-name']}.....`);
         } else {

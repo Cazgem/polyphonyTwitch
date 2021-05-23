@@ -11,7 +11,7 @@ const db = mysql.createConnection({
     database: config.mysql.database
 });
 exports.run = (client, msg, params, context, channel, self) => {
-    const modules_obs = [`cazgem`, `citiesinasnap`, `polyphony`];
+    const modules_obs = [`cazgem`, `gamesinasnap`, `polyphony`];
     async function refresh(participant) {
         polyphony.OBS_RefreshParticipants(participant);
     }

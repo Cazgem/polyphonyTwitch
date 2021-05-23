@@ -11,7 +11,7 @@ const db = mysql.createConnection({
     database: config.mysql.database
 });
 exports.run = (client, context, channel, db) => {
-    if (context.mod || (context["display-name"] === "citiesinasnap")) {
+    if (context.mod || (context["display-name"] === "gamesinasnap")) {
         let sql = `SELECT name FROM CiaS_Participants`;
         let response = db.query(sql, (err, result) => {
             if (err) throw err;
