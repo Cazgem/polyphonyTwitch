@@ -90,6 +90,6 @@ exports.run = (cname, client, msg, params, context, channel, self, polyphony) =>
         // });
 
     } else {
-        client.action(channel, `Not a Recognized Command!`);
+        // client.action(channel, `Not a Recognized Command!`);
     }
 }

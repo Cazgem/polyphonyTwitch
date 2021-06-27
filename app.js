@@ -166,7 +166,126 @@ process.on('message', (message) => {
 app.listen(port, () => {
   console.log(chalk.yellow(`App is listening at https://twitchapi.polyphony.me/`));
 });
+const twitchSigningSecret = 'cazcatsbestcats';
+const verifyTwitchSignature = (req, res, buf, encoding) => {
+  const messageId = req.header("Twitch-Eventsub-Message-Id");
+  const timestamp = req.header("Twitch-Eventsub-Message-Timestamp");
+  const messageSignature = req.header("Twitch-Eventsub-Message-Signature");
+  const time = Math.floor(new Date().getTime() / 1000);
+  console.log(`Message ${messageId} Signature: `, messageSignature);
 
+  if (Math.abs(time - timestamp) > 600) {
+    // needs to be < 10 minutes
+    console.log(`Verification Failed: timestamp > 10 minutes. Message Id: ${messageId}.`);
+    throw new Error("Ignore this request.");
+  }
+
+  if (!twitchSigningSecret) {
+    console.log(`Twitch signing secret is empty.`);
+    throw new Error("Twitch signing secret is empty.");
+  }
+
+  const computedSignature =
+    "sha256=" +
+    crypto
+      .createHmac("sha256", twitchSigningSecret)
+      .update(messageId + timestamp + buf)
+      .digest("hex");
+  console.log(`Message ${messageId} Computed Signature: `, computedSignature);
+
+  if (messageSignature !== computedSignature) {
+    throw new Error("Invalid signature.");
+  } else {
+    console.log("Verification successful");
+  }
+};
+
+app.use(express.json({ verify: verifyTwitchSignature }));
+app.post("/webhooks/callback", async (req, res) => {
+  const messageType = req.header("Twitch-Eventsub-Message-Type");
+  if (messageType === "webhook_callback_verification") {
+    console.log("Verifying Webhook");
+    return res.status(200).send(req.body.challenge);
+  }
+  const { type } = req.body.subscription;
+  const { event } = req.body;
+
+  console.log(
+    `Receiving ${type} request for ${event.broadcaster_user_name}: `,
+    event
+  );
+
+  res.status(200).end();
+});
+let clientId = config.clientId
+let authToken = config.authToken
+let ngrokUrl = 'twitchapi.polyphony.me'
+
+app.post('/createWebhook/:broadcasterId', (req, res) => {
+  var createWebHookParams = {
+    host: "api.twitch.tv",
+    path: "helix/eventsub/subscriptions",
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Client-ID": clientId,
+      "Authorization": "Bearer " + authToken
+    }
+  }
+  var createWebHookBody = {
+    "type": "channel.follow",
+    "version": "1",
+    "condition": {
+      "broadcaster_user_id": "470816908"
+    },
+    "transport": {
+      "method": "webhook",
+      // For testing purposes you can use an ngrok https tunnel as your callback URL
+      "callback": ngrokUrl + "/notification", // If you change the /notification path make sure to also adjust in line 69
+      "secret": "keepItSecretKeepItSafe" // Replace with your own secret
+    }
+  }
+  var responseData = ""
+  var webhookReq = https.request(createWebHookParams, (result) => {
+    result.setEncoding('utf8')
+    result.on('data', function (d) {
+      responseData = responseData + d
+    })
+      .on('end', function (result) {
+        var responseBody = JSON.parse(responseData)
+        res.send(responseBody)
+      })
+  })
+  webhookReq.on('error', (e) => { console.log("Error") })
+  webhookReq.write(JSON.stringify(createWebHookBody))
+  webhookReq.end()
+})
+
+function verifySignature(messageSignature, messageID, messageTimestamp, body) {
+  let message = messageID + messageTimestamp + body
+  let signature = crypto.createHmac('sha256', "keepItSecretKeepItSafe").update(message) // Remember to use the same secret set at creation
+  let expectedSignatureHeader = "sha256=" + signature.digest("hex")
+
+  return expectedSignatureHeader === messageSignature
+}
+
+app.post('/notification', (req, res) => {
+  if (!verifySignature(req.header("Twitch-Eventsub-Message-Signature"),
+    req.header("Twitch-Eventsub-Message-Id"),
+    req.header("Twitch-Eventsub-Message-Timestamp"),
+    req.rawBody)) {
+    res.status(403).send("Forbidden") // Reject requests with invalid signatures
+  } else {
+    if (req.header("Twitch-Eventsub-Message-Type") === "webhook_callback_verification") {
+      console.log(req.body.challenge)
+      res.send(req.body.challenge) // Returning a 200 status with the received challenge to complete webhook creation flow
+
+    } else if (req.header("Twitch-Eventsub-Message-Type") === "notification") {
+      console.log(req.body.event) // Implement your own use case with the event data at this block
+      res.send("") // Default .send is a 200 status
+    }
+  }
+})
 var httpServer = http.createServer(app);
 var httpsServer = https.createServer(credentials, app);
 

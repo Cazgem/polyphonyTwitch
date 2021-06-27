@@ -8,3 +8,10 @@ nodemon.jsondddd
 tokens.json
 webHooksDB.json
 Untitled-1.json
+cert.pem
+key.pem
+app2.js
+discord_app.js
+cluster.js
+heartbeat2.js
+interface.js

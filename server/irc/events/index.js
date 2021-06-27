@@ -9,8 +9,28 @@ const TwitchPS = require('twitchps');
 const Discord = require(`discord.js`);
 const Newsticker = require(`caznews`);
 const Polyphony = require('polyphony.js');
+const { ApiClient } = require('twitch');
+const { ClientCredentialsAuthProvider } = require('twitch-auth');
+const { DirectConnectionAdapter, EventSubListener } = require('twitch-eventsub');
+const authProvider = new ClientCredentialsAuthProvider(config.clientId, config.clientSecret);
+const apiClient = new ApiClient({ authProvider });
+const listener = new EventSubListener(apiClient, new DirectConnectionAdapter({
+    hostName: 'https://twitchapi.polyphony.me'
+}), 'polyphonysayscazcatsbestcats');
+const eventsub = async () => {
+    const userId = '470816908';
+
+    const onlineSubscription = await listener.subscribeToStreamOnlineEvents(userId, e => {
+        console.log(`${e.broadcasterDisplayName} just went live!`);
+    });
+
+    const offlineSubscription = await listener.subscribeToStreamOfflineEvents(userId, e => {
+        console.log(`${e.broadcasterDisplayName} just went offline`);
+    });
+    await listener.listen();
+}
 // const twitchCPR = require(`./modules/twitchcpr.js`);
-//// const notifier = require('node-notifier');
+//// const notifier = require('node-notifier');  
 const ciasOPTS = {
     OBSaddress: config.default.obs_address,
     OBSpassword: config.default.obs_pass,
@@ -144,6 +164,19 @@ function sleep(milliseconds) {
         currentDate = Date.now();
     } while (currentDate - date < milliseconds);
 }
+const joinchannels = (polyphony, client) => {
+    polyphony.Twitch.modules('all').then(data => {
+        data.forEach(chan => {
+            setTimeout(() => {
+                client.join(chan).then(() => { sleep(25); }).then((
+                    psStreamStatus(chan)))
+                    .catch((err) => {
+                        // sleep(2000);
+                    });
+            }, 1000)
+        });
+    })
+}
 db.on('error', function (err) {
     console.log(`${err.code}`); // 'ER_BAD_DB_ERROR'
     log(`error`, `${err.code}`);
@@ -153,8 +186,110 @@ process.on('uncaughtException', function (err) {
     log(`error`, 'uncaught exception: ' + err);
     // console.log("Node NOT Exiting...");
 });
+discord.on('ready', async () => {
+    console.log(chalk.yellow('I am ready for Discord!'));
+});
+const news_opts = {
+    mysql: {
+        host: config.mysql.host,
+        user: config.mysql.user,
+        password: config.mysql.password,
+        database: config.mysql.database,
+    },
+    obs: {
+        address: config.obs.address,
+        password: config.obs.pass,
+        newsreel: 'CazgemNews'
+    },
+    timer: 60,
+    table: `caznews`
+}
+const checkLive = async (channel) => {
+    await polyphony.Twitch.isLive(`${channel}`).then((data) => {
+        if (data === true) {
+            try {
+                const discordchannel = discord.channels.cache.get('844781996693258251').send(`${channel} is live! Let's do this. https://twitch.tv/${channel}`);
+                if (!discordchannel) return;
+            } catch {
+                console.log('Error!')
+            }
+        } else {
+            console.log('Nope!')
+        }
+    })
+}
+function Timers() {
+    console.log(chalk.green("PING"));
+    client.ping()
+        .then((data) => {
+            console.log(chalk.green(`PONG: ` + data));
+        }).catch((err) => {
+            //
+        });
+    let sql = `SELECT * FROM timers`;
+    let response = db.query(sql, (err, result) => {
+        if (err) throw err;
+        Object.keys(result).forEach(function (id) {
+            setTimeout(() => {
+                client.action(result[id].channel, result[id].string);
+            }, (result[id].interval * 60000));
+        });
+        // polyphony.cleanup();
+    });
+}
+function setTitle(message, context, client, channel) {
+    let body = {
+        title: `${message}`
+    }
+    polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+        if (err !== null) {
+            console.log(err)
+        } else {
+            client.action(channel, `Changed Stream Title -> ${body.title}`)
+        }
+    })
+}
+function setGame(message, context, client, channel) {
+    let prepared = escape(message);
+    polyphony.Twitch.gameByName(prepared, function (err, game) {
+        if (err) {
+            // console.log(err)
+        } else {
+            let body = {
+                game_id: `${game.id}`
+            }
+            polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
+                if (err) {
+                    console.log(err.statusCode)
+                } else {
+                    client.action(channel, `Changed Stream Category -> ${message}`)
+                    console.log(res)
+                }
+            })
+        }
+    })
+}
+discord.login(config.discord.token);
 module.exports = {
     attachEvents: function (client, app, path) {
+        function command(channel, cname) {
+            try {
+                var chan = channel.slice(1);
+                let sql = `SELECT response FROM commands WHERE channel = ? AND command = ?`;
+                let response = db.query(sql, [chan, cname], (err, result) => {
+                    if (response !== '') {
+                        Object.keys(result).forEach(function (key) {
+                            client.action(channel, result[key].response);
+                        });
+                    } else {
+                        console.log('There Was an Error!')
+                    }
+                    // polyphony.cleanup();
+                });
+            } catch (err) {
+                console.log('There Was an Error!')
+            }
+        }
         // Discord_Passive();
         app.post("/webhooks/callback", (req, res) => {
             hotload(`./handlers/eventsub.js`).run(req, res, polyphony, client, fs, path);
@@ -171,24 +306,9 @@ module.exports = {
                 }, 1000)
             });
         })
-        const news_opts = {
-            mysql: {
-                host: config.mysql.host,
-                user: config.mysql.user,
-                password: config.mysql.password,
-                database: config.mysql.database,
-            },
-            obs: {
-                address: config.obs.address,
-                password: config.obs.pass,
-                newsreel: 'CazgemNews'
-            },
-            timer: 60,
-            table: `caznews`
-        }
+        eventsub();
         Twitch_PS(news_opts);
         client.on('message', function (channel, context, msg, self) {
-            // console.log(msg);
             log(`info`, `${channel} | ${context['display-name']} | ${msg}`);
             const chan = channel.slice(1).toLowerCase();
             if (msg.toLowerCase().includes('cazgem')) {
@@ -299,19 +419,19 @@ module.exports = {
                     else if (msg === '^^') { client.action(channel, '^^^'); return; }
                     else if (msg[0] !== '!') { return; }
                     //////// MODERATOR/BROADCASTER ONLY COMMANDS ////////
-                    if (twitch.mod(context)) {
-                        // Commands_OBS(channel, context, msg, client, params, cname);
-                        polyphony.Twitch.modules('obs').then(data => {
-                            if (data.includes(channel.slice(1))) {
-                                let module = 'obsHandler';
-                                hotload(`./handlers/${module}.js`).run(client, msg, context, channel, polyphony);
-                            }
-                        });
-                        if (cname === 'polyphony' || cname === `poly`) {
-                            let module = 'polyphony_handler';
-                            hotload(`./handlers/${module}.js`).run(channel, context, message, client, params, cname, polyphony, db)
-                        }
-                    }
+                    // if (twitch.mod(context)) {
+                    //     // Commands_OBS(channel, context, msg, client, params, cname);
+                    //     polyphony.Twitch.modules('obs').then(data => {
+                    //         if (data.includes(channel.slice(1))) {
+                    //             let module = 'obsHandler';
+                    //             hotload(`./handlers/${module}.js`).run(client, msg, context, channel, polyphony);
+                    //         }
+                    //     });
+                    //     if (cname === 'polyphony' || cname === `poly`) {
+                    //         let module = 'polyphony_handler';
+                    //         hotload(`./handlers/${module}.js`).run(channel, context, message, client, params, cname, polyphony, db)
+                    //     }
+                    // }
                     if ((context['display-name'] === 'Cazgem') && (cname === `raid`)) {
                         client.action(channel, `/raid ${params[0]}`);
                         client.action(channel, `Everyone we're passing the love along here! It's time to raid ${params[0]}.`);
@@ -481,71 +601,7 @@ module.exports = {
                 }, (60 * 60000));
             }
         })
-        function Timers() {
-            console.log(chalk.green("PING"));
-            client.ping()
-                .then((data) => {
-                    console.log(chalk.green(`PONG: ` + data));
-                }).catch((err) => {
-                    //
-                });
-            let sql = `SELECT * FROM timers`;
-            let response = db.query(sql, (err, result) => {
-                if (err) throw err;
-                Object.keys(result).forEach(function (id) {
-                    setTimeout(() => {
-                        client.action(result[id].channel, result[id].string);
-                    }, (result[id].interval * 60000));
-                });
-                // polyphony.cleanup();
-            });
-        }
-        function command(channel, cname) {
-            try {
-                var chan = channel.slice(1);
-                let sql = `SELECT response FROM commands WHERE channel = ? AND command = ?`;
-                let response = db.query(sql, [chan, cname], (err, result) => {
-                    // console.log(response)
-                    if (response !== '') {
-                        Object.keys(result).forEach(function (key) {
-                            client.action(channel, result[key].response);
-                        });
-                    }
-                    // polyphony.cleanup();
-                });
-            } catch (err) { }
-        }
-        function setTitle(message, context, client, channel) {
-            let body = {
-                title: `${message}`
-            }
-            polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
-                if (err !== null) {
-                    console.log(err)
-                } else {
-                    client.action(channel, `Changed Stream Title -> ${body.title}`)
-                }
-            })
-        }
-        function setGame(message, context, client, channel) {
-            let prepared = escape(message);
-            polyphony.Twitch.gameByName(prepared, function (err, game) {
-                if (err) {
-                    // console.log(err)
-                } else {
-                    let body = {
-                        game_id: `${game.id}`
-                    }
-                    polyphony.Twitch.editChannel(context[`room-id`], body, function (err, res) {
-                        if (err) {
-                            console.log(err.statusCode)
-                        } else {
-                            client.action(channel, `Changed Stream Category -> ${message}`)
-                            console.log(res)
-                        }
-                    })
-                }
-            })
-        }
+        checkLive('2LegitCity_')
+        checkLive('polyphony')
     }
 }
