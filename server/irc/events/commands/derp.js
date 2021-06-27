@@ -1,5 +1,5 @@
 exports.run = (client, msg, params, context, channel, polyphony) => {
-    const polyphonyAltNames = [`polyphony`, `Polyphony`, `P0lyphony`, `Po1yphony`, `POlyphony`, `POLYPHONY`];
+    const polyphonyAltNames = [`polyphony`, `Polyphony`, `P0lyphony`, `Po1yphony`, `POlyphony`, `POLYPHONY`, `PoIyphony`];
     const cazgemAltNames = [`cazgem`, `Cazgem`, `Caz`, `caz`, `CAZGEM`];
     if (cazgemAltNames.includes(msg)) {
         polyphony.OBS.trigger('Derp!', 2, function (err, res) {
