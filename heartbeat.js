@@ -1,3 +1,4 @@
+// Core File When Heartbeat is Required (recommended) //
 var fork = require('child_process').fork;
 var server, heartbeat;
 
