@@ -37,8 +37,10 @@ const ciasOPTS = {
     MYSQLhost: config.mysql.host,
     MYSQLuser: config.mysql.user,
     MYSQLpassword: config.mysql.password,
-    MYSQLdatabase: config.mysql.database,
-    MYSQLtable: `CiaS_Participants`
+    MYSQLdatabase: `Gaming_In_A_Snap`,
+    EventsTable: `Events`,
+    CompetitorsTable: `Competitors`,
+    UsersTable: `Registration`
 }
 const polyphony = new Polyphony(config, 3205);
 const twitch = polyphony.Twitch;
@@ -308,6 +310,7 @@ module.exports = {
         })
         eventsub();
         Twitch_PS(news_opts);
+        const cias = new CiaS(ciasOPTS, client);
         client.on('message', function (channel, context, msg, self) {
             log(`info`, `${channel} | ${context['display-name']} | ${msg}`);
             const chan = channel.slice(1).toLowerCase();
@@ -322,12 +325,13 @@ module.exports = {
             const message = msg.slice(cname.length + 2);
             //////////// CiaS Command Set ////////////
             if (chan === `gamesinasnap`) {
-                const cias = new CiaS(ciasOPTS, client);
                 if (cname === `participants`) {
-                    console.log(params);
-                    polyphony.Twitch.user(params[2], function (err, res) {
-                        cias.participants(params, res.profile_image_url, context, channel);
-                    })
+                    cias.participants(params, context, channel);
+                } else if ((cname === `setevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    cias.event_id = params[0];
+                    client.action(channel, `Event ${params[0]} Selected`);
+                } else if ((cname === `getevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    client.action(channel, `Event ${cias.event_id} Already Selected`);
                 } else if ((cname === `winner`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
                     cias.winner(params[0], function (err, res) {
                         cias.announce(`A Winner A Winner has been chosen! Congratulations to ${params[1]} on winning Cities in a Snap!`, context);
