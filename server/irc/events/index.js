@@ -326,7 +326,11 @@ module.exports = {
             //////////// CiaS Command Set ////////////
             if (chan === `gamesinasnap`) {
                 if (cname === `participants`) {
-                    cias.participants(params, context, channel);
+                    if (cias.event_id != '') {
+                        cias.participants(params, context, channel);
+                    } else {
+                        client.action(channel, `Please Set Event Number!`)
+                    }
                 } else if ((cname === `setevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
                     cias.event_id = params[0];
                     client.action(channel, `Event ${params[0]} Selected`);
