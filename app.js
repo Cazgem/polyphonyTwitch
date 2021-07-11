@@ -18,10 +18,10 @@ const Polyphony = require('polyphony.js');
 const polyphony = new Polyphony(config, 3207);
 const webpush = require(`web-push`);
 const crypto = require('crypto');
-const _config = JSON.parse(fs.readFileSync(path.join(
-  __dirname,
-  '_config.json'
-)));
+// const config = JSON.parse(fs.readFileSync(path.join(
+//   __dirname,
+//   '_config.json'
+// )));
 const credentials = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
