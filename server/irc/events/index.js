@@ -326,14 +326,28 @@ module.exports = {
             //////////// CiaS Command Set ////////////
             if (chan === `gamesinasnap`) {
                 if (cname === `participants`) {
-                    if (cias.event_id != '') {
-                        cias.participants(params, context, channel);
+                    if (typeof cias.event_id !== 'undefined') {
+                        cias.participants(channel);
                     } else {
                         client.action(channel, `Please Set Event Number!`)
                     }
                 } else if ((cname === `setevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    if (typeof cias.event_id === 'undefined') {
+                        cias.part();
+                    }
                     cias.event_id = params[0];
+                    cias.join();
                     client.action(channel, `Event ${params[0]} Selected`);
+                } else if ((cname === `joinevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    cias.join();
+                } else if ((cname === `startevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    cias.join();
+                } else if ((cname === `endevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
+                    if (typeof cias.event_id !== 'undefined') {
+                        cias.part();
+                        client.action(channel, `Event ${cias.event_id} Ended`);
+                        cias.event_id = 'undefined';
+                    }
                 } else if ((cname === `getevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
                     client.action(channel, `Event ${cias.event_id} Already Selected`);
                 } else if ((cname === `winner`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
