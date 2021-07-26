@@ -10,7 +10,6 @@
         "caznews": "^0.0.1",
         "chalk": "^3.0.0",
         "chat-client": "^1.0.3",
-        "cias": "^3.0.8",
         "cluster": "^0.7.7",
         "crypto": "^1.0.1",
         "discord.js": "^12.3.1",

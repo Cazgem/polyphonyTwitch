@@ -30,17 +30,17 @@ const eventsub = async () => {
     await listener.listen();
 }
 // const twitchCPR = require(`./modules/twitchcpr.js`);
-//// const notifier = require('node-notifier');  
+//// const notifier = require('node-notifier');
 const ciasOPTS = {
-    OBSaddress: config.default.obs_address,
-    OBSpassword: config.default.obs_pass,
+    initialize: true,
     MYSQLhost: config.mysql.host,
     MYSQLuser: config.mysql.user,
     MYSQLpassword: config.mysql.password,
     MYSQLdatabase: `Gaming_In_A_Snap`,
     EventsTable: `Events`,
     CompetitorsTable: `Competitors`,
-    UsersTable: `Registration`
+    UsersTable: `Registration`,
+    channel: `gamesinasnap`
 }
 const polyphony = new Polyphony(config, 3205);
 const twitch = polyphony.Twitch;
@@ -325,52 +325,8 @@ module.exports = {
             const message = msg.slice(cname.length + 2);
             //////////// CiaS Command Set ////////////
             if (chan === `gamesinasnap`) {
-                if (cname === `participants`) {
-                    if (typeof cias.event_id !== 'undefined') {
-                        cias.participants(channel);
-                    } else {
-                        client.action(channel, `Please Set Event Number!`)
-                    }
-                } else if ((cname === `setevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    if (typeof cias.event_id === 'undefined') {
-                        cias.part();
-                    }
-                    cias.event_id = params[0];
-                    cias.join();
-                    client.action(channel, `Event ${params[0]} Selected`);
-                } else if ((cname === `joinevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.join();
-                } else if ((cname === `startevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.join();
-                } else if ((cname === `endevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    if (typeof cias.event_id !== 'undefined') {
-                        cias.part();
-                        client.action(channel, `Event ${cias.event_id} Ended`);
-                        cias.event_id = 'undefined';
-                    }
-                } else if ((cname === `getevent`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    client.action(channel, `Event ${cias.event_id} Already Selected`);
-                } else if ((cname === `winner`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.winner(params[0], function (err, res) {
-                        cias.announce(`A Winner A Winner has been chosen! Congratulations to ${params[1]} on winning Cities in a Snap!`, context);
-                    });
-                } else if ((cname === `guest`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.guest(msg, context);
-                } else if ((cname === `ciasclear`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.clear();
-                } else if ((cname === `announce`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.announce(msg, context);
-                } else if ((cname === `route`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    console.log(params[0]);
-                    console.log(message.slice(params[0].length + 1));
-                    cias.route(params[0], message.slice(params[0].length + 1), context);
-                } else if ((cname === `tenseconds`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.tenseconds();
-                } else if ((cname === `starting`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.starting();
-                } else if ((cname === `refresh`) && ((context.mod) || (context['room-id'] === context['user-id']))) {
-                    cias.refreshParticipants(params);
-                }
+                let module = 'gamesinasnap';
+                require(`./modules/${module}.js`).run(cname, client, msg, params, context, channel, cias)
             }
             if (chan === `polyphony`) {
                 let module = 'onboarding';
@@ -454,6 +410,10 @@ module.exports = {
                     //         hotload(`./handlers/${module}.js`).run(channel, context, message, client, params, cname, polyphony, db)
                     //     }
                     // }
+                    if ((cname === `polyphony`) && (context['display-name'] === 'Cazgem')) {
+                        let module = 'polyphony';
+                        require(`./modules/${module}.js`).run(cname, client, msg, params, context, channel, self, polyphony);
+                    }
                     if ((context['display-name'] === 'Cazgem') && (cname === `raid`)) {
                         client.action(channel, `/raid ${params[0]}`);
                         client.action(channel, `Everyone we're passing the love along here! It's time to raid ${params[0]}.`);
