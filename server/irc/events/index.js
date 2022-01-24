@@ -300,7 +300,7 @@ module.exports = {
         polyphony.Twitch.modules('all').then(data => {
             data.forEach(chan => {
                 setTimeout(() => {
-                    client.join(chan).then(() => { sleep(25); }).then((
+                    client.join(chan).then(() => { sleep(1); }).then((
                         psStreamStatus(chan)))
                         .catch((err) => {
                             // sleep(2000);

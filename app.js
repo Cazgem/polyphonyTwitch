@@ -10,6 +10,7 @@ const nunjucks = require('nunjucks');
 const bodyParser = require("body-parser");
 const router = require('./server/routes');
 const path = require("path");
+const io = require(`socket.io`)(3000);
 // const notifier = require(`node-notifier`);
 const http = require(`http`);
 const https = require(`https`);
@@ -22,6 +23,9 @@ const crypto = require('crypto');
 //   __dirname,
 //   '_config.json'
 // )));
+io.on(`connection`, socket => {
+  console.log(socket.id)
+})
 const credentials = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
